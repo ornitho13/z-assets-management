@@ -1,6 +1,6 @@
 {
   "name" : "zam : zoomcar asset management",
-  "version" : "0.0.1",
+  "version" : "0.1",
   "description" : "manage asset for zoomcar and ofm",
   "devDependencies": {
     "uglify-js" : "^2.6.1"
