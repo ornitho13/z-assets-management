@@ -7,9 +7,34 @@ var fs = require('fs');
 var url = require('url');
 var config;
 var uglify = require('uglify-js');
+var regExpRequire = new RegExp("require '(.*)';", 'gm');
 
 function isEmptyObject(obj) {
   return !Object.keys(obj).length;
+}
+
+function getContentRecursive(file, currentAssetType, currentPackage, path) {
+  //console.log(' -- ' + file);
+  content = '/** ' + path + file + ' **/' + "\n";
+  try {
+    fs.accessSync(path + file, fs.F_OK);
+    //match require
+    var partialContent = fs.readFileSync(path + file).toString();
+    var matches = partialContent.match(regExpRequire);
+    //var matches = regExpRequire.exec(partialContent);
+    if (matches && matches.length > 0) {
+      matches.forEach(function(match, index, array) {
+        fileRequire = match.replace("require '", '').replace("';", '');
+        var contentRecursive = getContentRecursive(fileRequire, currentAssetType, currentPackage, path);
+        partialContent = partialContent.replace(match, contentRecursive);
+      });
+    }
+    return partialContent;
+  } catch (err) {
+    console.error(err);
+    content += "/** missing file : " + path + file + " **/\n";
+  }
+  return content;
 }
 
 //get main configuration
@@ -33,10 +58,10 @@ fs.access(configFile, fs.F_OK, function(err) {
           //verify domain exists in url
           if (regExpDomain.test(urlConf.pathname)) {
             var splitPathname = urlConf.pathname.split('/');
-
             var currentDomain = splitPathname[2];
             var currentAssetType = splitPathname[3];
             var currentPackage = splitPathname[4];
+
             currentPackageOptions = currentPackage.split('.');
             currentPackage = currentPackageOptions[0];
             var needMinification = currentPackageOptions[1] === 'min' ? true : false;
@@ -69,15 +94,7 @@ fs.access(configFile, fs.F_OK, function(err) {
                     }
                   }
                   Array.prototype.forEach.call(domainConfig[currentAssetType].packages[currentPackage], function(file) {
-                    //console.log(' -- ' + file);
-                    content += '/** ' + path + file + ' **/' + "\n";
-                    try {
-                      fs.accessSync(path + file, fs.F_OK);
-                      content += fs.readFileSync(path + file).toString();
-                    } catch (err) {
-                      content += "/** missing file : " + path + file + " **/\n";
-                    }
-
+                    content += getContentRecursive(file, currentAssetType, currentPackage, path);
                   });
                   var contentSave = content;
                   try {
@@ -87,6 +104,7 @@ fs.access(configFile, fs.F_OK, function(err) {
                       content = content.code;
                     }
                   } catch (err) {
+                    console.error(err);
                       content = contentSave;
                   }
                   res.writeHead(200, {"Content-Type": contentType});
