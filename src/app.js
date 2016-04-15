@@ -279,7 +279,7 @@ fs.access(configFile, fs.F_OK, function(err) {
             currentPackage = currentPackageOptions[0];
             var needMinification = currentPackageOptions[1] === 'min' ? true : false;
             console.log(needMinification);
-
+console.log(domain);
             //domain exists so we get the conf of this domain
             fs.access(domain.configFile, fs.F_OK, function(err) {
               if (err) {
