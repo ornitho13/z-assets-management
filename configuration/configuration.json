@@ -2,7 +2,8 @@
   "domains" : [
     {
       "label" : "zoomcar",
-      "configFile" : "C:/wamp/www/www-perso/test/zam-conf/zam-test-conf.json"
+      "configFileServer" : "D:\\workspace\\zoomcar\\static\\configuration\\zam-conf.json",
+      "configFile" : "/var/www/ofatest/zoomcar/static/configuration/zam-conf.json"
     }
   ],
   "server" : {
