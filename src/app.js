@@ -32,17 +32,26 @@ fs.access(configFile, fs.F_OK, function(err) {
           regExpDomain = new RegExp(domain.label);
           //verify domain exists in url
           if (regExpDomain.test(urlConf.pathname)) {
+            console.log(urlConf.pathname);
             var splitPathname = urlConf.pathname.split('/');
-
-            var currentDomain = splitPathname[2];
+            console.log('split', splitPathname);
+            var currentDomain = splitPathname[1];
             var currentAssetType = splitPathname[3];
             var currentPackage = splitPathname[4];
             currentPackageOptions = currentPackage.split('.');
             currentPackage = currentPackageOptions[0];
             var needMinification = currentPackageOptions[1] === 'min' ? true : false;
+            if (currentPackageOptions[1] === 'mobile') {
+              currentPackage += '.mobile';
+              needMinification = currentPackageOptions[2] === 'min' ? true : false;
+            }
+            console.log('[zam-log:asset] package selected => ' + currentPackage);
+            console.log('[zam-log:asset] need minification => ' + needMinification)
 
             //domain exists so we get the conf of this domain
+            console.log(domain.configFile);
             fs.access(domain.configFile, fs.F_OK, function(err) {
+              console.log(err);
               if (err) {
                 console.error('[zam-error:domain-config-file] config file for domain ' + domain.label + ' doesn\'t exist');
               } else {
@@ -54,22 +63,18 @@ fs.access(configFile, fs.F_OK, function(err) {
                   var content = '';
                   var path = '';
 
-                  if (currentAssetType === 'js') {
+
+                  if (currentAssetType === 'scripts') {
                     console.log('[zam-log:asset] js type');
 
-                    path = domainConfig.root + '/' + domainConfig.js.path + '/';
-                    //console.log('[zam-log:domain-config-file]', domainPathPackage);
-                    // search in js packages
                   } else {
                     if (currentAssetType === 'css') {
                       contentType = 'text/css';
                       console.log('[zam-log:asset] css type');
-                      path = domainConfig.root + '/' + domainConfig.css.path + '/';
-                      //search in css packages
                     }
                   }
+                  path = domainConfig.root + '/' + domainConfig[currentAssetType].path + '/';
                   Array.prototype.forEach.call(domainConfig[currentAssetType].packages[currentPackage], function(file) {
-                    //console.log(' -- ' + file);
                     content += '/** ' + path + file + ' **/' + "\n";
                     try {
                       fs.accessSync(path + file, fs.F_OK);
@@ -81,7 +86,7 @@ fs.access(configFile, fs.F_OK, function(err) {
                   });
                   var contentSave = content;
                   try {
-                    if (needMinification && currentAssetType === 'js') {
+                    if (needMinification && currentAssetType === 'scripts') { //remove minification
                       // go minification
                       var content = uglify.minify(content, {fromString: true});
                       content = content.code;
@@ -89,9 +94,15 @@ fs.access(configFile, fs.F_OK, function(err) {
                   } catch (err) {
                       content = contentSave;
                   }
-                  res.writeHead(200, {"Content-Type": contentType});
-                  res.write(content);
-                  res.end();
+                  res.writeHead(200, {
+                    "Content-Type": contentType,
+                    "Content-Length": content.length,
+                    "Accept-Ranges": "bytes",
+                    "Cache-Control": "public, max-age=" + (60*60)
+
+                  });
+                  //res.write(content);
+                  res.end(content);
                   return;
 
                 } else {
