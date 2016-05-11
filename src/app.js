@@ -86,7 +86,7 @@ fs.access(configFile, fs.F_OK, function(err) {
                   });
                   var contentSave = content;
                   try {
-                    if (needMinification && currentAssetType === 'scripts') { //remove minification
+                    if (needMinification && currentAssetType === 'none') { //remove minification
                       // go minification
                       var content = uglify.minify(content, {fromString: true});
                       content = content.code;
@@ -97,8 +97,8 @@ fs.access(configFile, fs.F_OK, function(err) {
                   res.writeHead(200, {
                     "Content-Type": contentType,
                     "Content-Length": content.length,
-                    "Accept-Ranges": "bytes",
-                    "Cache-Control": "public, max-age=" + (60*60)
+                    "Accept-Ranges": "bytes"//,
+                    //"Cache-Control": "public, max-age=" + (60*60)
 
                   });
                   //res.write(content);
