@@ -96,7 +96,7 @@ fs.access(configFile, fs.F_OK, function(err) {
                   }
                   res.writeHead(200, {
                     "Content-Type": contentType,
-                    "Content-Length": content.length,
+                    //"Content-Length": content.length,
                     "Accept-Ranges": "bytes"//,
                     //"Cache-Control": "public, max-age=" + (60*60)
 
