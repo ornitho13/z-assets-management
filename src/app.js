@@ -39,12 +39,12 @@ fs.access(configFile, fs.F_OK, function(err) {
               }
 
               Array.prototype.forEach.call(domainConfig[req.params.assetType].packages[req.params.package], function(file) {
-                content += '/** ' + path + file + ' **//*' + "\n";
+                content += '/** ' + path + file + ' **/' + "\n";
                 try {
                   fs.accessSync(path + file, fs.F_OK);
                   content += fs.readFileSync(path + file).toString();
                 } catch (err) {
-                  content += "/** missing file : " + path + file + " **//*\n";
+                  content += "/** missing file : " + path + file + " **/\n";
                   console.log('[zam-log:missing-file] '  + path + file);
                 }
               });
