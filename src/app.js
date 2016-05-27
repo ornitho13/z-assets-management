@@ -10,7 +10,7 @@ var http = require('http'),
 function isEmptyObject(obj) {
   return !Object.keys(obj).length;
 }
-
+console.log('test zam init and start');
 var configFile = __dirname + "/../configuration/configuration.json";
 fs.access(configFile, fs.F_OK, function(err) {
   if (err) {
@@ -19,6 +19,7 @@ fs.access(configFile, fs.F_OK, function(err) {
     var config = require(configFile);
     if (!isEmptyObject(config)) {
       var zam = express();
+      console.log('before start')
       zam.get('/:domain/:revision/:assetType/:package\.:minification\.js', function(req, res){
         var domainConfig = config.domains[req.params.domain].configFile;
         fs.access(domainConfig, fs.F_OK, function(err) {
@@ -44,7 +45,7 @@ fs.access(configFile, fs.F_OK, function(err) {
                   fs.accessSync(path + file, fs.F_OK);
                   content += fs.readFileSync(path + file).toString();
                 } catch (err) {
-                  content += "/** missing file : " + path + file + " **/\n";
+                  content += "/** missing file : " + path + file + " **/if (window.console) {console.log('missing file : " + path + file + "')}\n";
                   console.log('[zam-log:missing-file] '  + path + file);
                 }
               });
@@ -73,6 +74,8 @@ fs.access(configFile, fs.F_OK, function(err) {
             }
           }
         });
+      }).get('/*', function(req, res){
+        console.log(req, res);
       });
       zam.listen(config.server.port);
     } else {
