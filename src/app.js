@@ -5,7 +5,8 @@ var http = require('http'),
     fs = require('fs'),
     uglify = require('uglify-js'),
     error,
-    express = require('express');
+    express = require('express'),
+    sass = require('node-sass');
 
 function isEmptyObject(obj) {
   return !Object.keys(obj).length;
@@ -20,7 +21,7 @@ fs.access(configFile, fs.F_OK, function(err) {
     if (!isEmptyObject(config)) {
       var zam = express();
       console.log('before start')
-      zam.get('/:domain/:revision/:assetType/:package\.:minification\.js', function(req, res){
+      zam.get('/:domain/:revision/:assetType/:package\.:minification\.(js|css)', function(req, res){
         var domainConfig = config.domains[req.params.domain].configFile;
         fs.access(domainConfig, fs.F_OK, function(err) {
           if (err) {
@@ -51,7 +52,7 @@ fs.access(configFile, fs.F_OK, function(err) {
               });
 
               try {
-                if (typeof req.params.minification !== "undefined" && req.params.assetType === 'none') { //remove minification
+                if (typeof req.params.minification !== "undefined" && req.params.assetType === 'scripts') { //remove minification
                   // go minification
                   content = uglify.minify(content, {fromString: true});
                   content = content.code;
@@ -60,13 +61,36 @@ fs.access(configFile, fs.F_OK, function(err) {
                 console.log('minification failed');
                 console.error(err);
               }
-              res.status(200).set({
-                "Content-Type": contentType,
-                //"Content-Length": content.length,
-                "Accept-Ranges": "bytes"//,
-                //"Cache-Control": "public, max-age=" + (60*60)
+              if (typeof req.params.assetType === "stylesheets") {
+                sass.render({
+                  file: req.params.package + ".scss",
+                  includePaths: path,
+                  outputStyle: (typeof req.params.minification !== "undefined" ? "production" : "nested")
+                }, function(err, result){
+                  if (!err) {
+                    content = result;
+                  } else {
+                    content = err;
+                  }
 
-              }).send(content);
+                  res.status(200).set({
+                    "Content-Type": contentType,
+                    "Content-Length": content.length,
+                    "Accept-Ranges": "bytes"//,
+                    //"Cache-Control": "public, max-age=" + (60*60)
+
+                  }).send(content);
+                })
+              } else {
+                res.status(200).set({
+                  "Content-Type": contentType,
+                  "Content-Length": content.length,
+                  "Accept-Ranges": "bytes"//,
+                  //"Cache-Control": "public, max-age=" + (60*60)
+
+                }).send(content);
+              }
+
             } else {
               console.error('[zam-error:domain-config-file] domain ' + currentDomain + ' the config file is empty : ' + domainConfig);
               error = '<b style="color: #900">[zam-error:domain-config-file]</b> domain ' + currentDomain + ' the config file is empty : ' + domainConfig;
@@ -75,7 +99,7 @@ fs.access(configFile, fs.F_OK, function(err) {
           }
         });
       }).get('/*', function(req, res){
-        console.log(req, res);
+        console.log(req);
       });
       zam.listen(config.server.port);
     } else {

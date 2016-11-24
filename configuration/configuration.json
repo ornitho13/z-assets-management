@@ -1,9 +1,8 @@
 {
   "domains" : {
-    "zoomcar" : {
-      "label" : "zoomcar",
-      "configFileServer" : "D:\\workspace\\zoomcar\\static\\configuration\\zam-conf.json",
-      "configFile" : "/var/www/ofatest/zoomcar/static/configuration/zam-conf.json"
+    "plop" : {
+      "label" : "plop",
+      "configFile" : "D:/developpement/www/test/zam-conf/zam-conf.json"
     },
     "ofa" : {
 
